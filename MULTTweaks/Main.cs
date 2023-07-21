@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using HarmonyLib;
 using R2API;
 using R2API.ContentManagement;
 using System;
@@ -24,14 +25,32 @@ namespace HIFUMultTweaks
         public const string PluginVersion = "1.0.4";
 
         public static ConfigFile HMTConfig;
+        public static ConfigFile HMTBackupConfig;
+
+        public static ConfigEntry<bool> enableAutoConfig { get; set; }
+        public static ConfigEntry<string> latestVersion { get; set; }
+
         public static ManualLogSource HMTLogger;
 
-        private string version = PluginVersion;
+        public static bool _preVersioning = false;
 
         public void Awake()
         {
             HMTLogger = Logger;
             HMTConfig = Config;
+
+            HMTBackupConfig = new(Paths.ConfigPath + "\\" + PluginAuthor + "." + PluginName + ".Backup.cfg", true);
+            HMTBackupConfig.Bind(": DO NOT MODIFY THIS FILES CONTENTS :", ": DO NOT MODIFY THIS FILES CONTENTS :", ": DO NOT MODIFY THIS FILES CONTENTS :", ": DO NOT MODIFY THIS FILES CONTENTS :");
+
+            enableAutoConfig = HMTConfig.Bind("Config", "Enable Auto Config Sync", true, "Disabling this would stop HIFMultTweaks from syncing config whenever a new version is found.");
+            _preVersioning = !((Dictionary<ConfigDefinition, string>)AccessTools.DeclaredPropertyGetter(typeof(ConfigFile), "OrphanedEntries").Invoke(HMTConfig, null)).Keys.Any(x => x.Key == "Latest Version");
+            latestVersion = HMTConfig.Bind("Config", "Latest Version", PluginVersion, "DO NOT CHANGE THIS");
+            if (enableAutoConfig.Value && (_preVersioning || (latestVersion.Value != PluginVersion)))
+            {
+                latestVersion.Value = PluginVersion;
+                ConfigManager.VersionChanged = true;
+                HMTLogger.LogInfo("Config Autosync Enabled.");
+            }
 
             IEnumerable<Type> enumerable = from type in Assembly.GetExecutingAssembly().GetTypes()
                                            where !type.IsAbstract && type.IsSubclassOf(typeof(TweakBase))
