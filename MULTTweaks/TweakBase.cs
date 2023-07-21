@@ -1,6 +1,6 @@
 ﻿using R2API;
 
-namespace HAT
+namespace HIFUMultTweaks
 {
     public abstract class TweakBase
     {
@@ -11,7 +11,7 @@ namespace HAT
 
         public T ConfigOption<T>(T value, string name, string description)
         {
-            return Main.HATConfig.Bind<T>(Name, name, value, description).Value;
+            return Main.HMTConfig.Bind<T>(Name, name, value, description).Value;
         }
 
         public abstract void Hooks();
@@ -24,9 +24,9 @@ namespace HAT
         public virtual void Init()
         {
             Hooks();
-            string descriptionToken = "MAGE_" + SkillToken.ToUpper() + "_DESCRIPTION";
+            string descriptionToken = "TOOLBOT_" + SkillToken.ToUpper() + "_DESCRIPTION";
             LanguageAPI.Add(descriptionToken, DescText);
-            Main.HATLogger.LogInfo("Added " + Name);
+            Main.HMTLogger.LogInfo("Added " + Name);
         }
     }
 }
