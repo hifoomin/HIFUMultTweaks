@@ -1,11 +1,12 @@
-﻿using R2API;
+﻿using RoR2.Skills;
+using R2API;
 using RoR2;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 namespace HIFUMultTweaks
 {
-    public class PowerMode : TweakBase
+    public class PowerMode : TweakBase<PowerMode>
     {
         public static BuffDef armorBuff;
         public static BuffDef slowBuff;
@@ -18,36 +19,17 @@ namespace HIFUMultTweaks
 
         public override string DescText => "Enter a heavy stance, equipping both your <style=cIsDamage>primary attacks</style> at once. Gain <style=cIsUtility>" + (5 * armor) + " decaying armor</style>, but lose <style=cIsHealth>-" + Mathf.Round((1 - (1 / (1 + speedReduc))) * 100) + "% movement speed</style>.";
 
-        public override void Hooks()
+        public override void Init()
         {
             armor = ConfigOption(20f, "Armor Buff", "Vanilla is 100");
             count = ConfigOption(5, "How many armor stacks to get", "Vanilla is 1 BUT it will decay in a second with vanilla settings, as the decay is 1 stack of armor per second.");
             speedReduc = ConfigOption(0.5f, "Slow Debuff", "Decimal. Vanilla is 0.5");
+            base.Init();
+        }
 
-            armorBuff = ScriptableObject.CreateInstance<BuffDef>();
-
-            var shieldIcon = Addressables.LoadAssetAsync<Texture2D>("RoR2/Base/Common/texBuffGenericShield.tif").WaitForCompletion();
-            armorBuff.isDebuff = false;
-            armorBuff.canStack = true;
-            armorBuff.isHidden = false;
-            armorBuff.name = "Power Mode Decaying Armor";
-            armorBuff.buffColor = new Color32(214, 201, 58, 255);
-            armorBuff.iconSprite = Sprite.Create(shieldIcon, new Rect(0f, 0f, (float)shieldIcon.width, (float)shieldIcon.height), new Vector2(0f, 0f));
-
-            ContentAddition.AddBuffDef(armorBuff);
-
-            slowBuff = ScriptableObject.CreateInstance<BuffDef>();
-
-            var slowIcon = Addressables.LoadAssetAsync<Texture2D>("RoR2/Base/Common/texBuffSlow50Icon.tif").WaitForCompletion();
-            slowBuff.isDebuff = true;
-            slowBuff.isCooldown = false;
-            slowBuff.isHidden = false;
-            slowBuff.buffColor = new Color32(234, 104, 107, 255);
-            slowBuff.name = "Power Mode Slow";
-            slowBuff.canStack = false;
-            slowBuff.iconSprite = Sprite.Create(slowIcon, new Rect(0f, 0f, (float)slowIcon.width, (float)slowIcon.height), new Vector2(0f, 0f));
-
-            ContentAddition.AddBuffDef(slowBuff);
+        public override void Hooks()
+        {
+            Changes();
 
             On.EntityStates.Toolbot.ToolbotDualWieldBase.OnEnter += ToolbotDualWieldBase_OnEnter;
             On.EntityStates.Toolbot.ToolbotDualWield.FixedUpdate += ToolbotDualWield_FixedUpdate;
@@ -55,6 +37,34 @@ namespace HIFUMultTweaks
 
             RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
         }
+
+        private void Changes()
+        {
+            armorBuff = ScriptableObject.CreateInstance<BuffDef>();
+
+            armorBuff.isDebuff = false;
+            armorBuff.canStack = true;
+            armorBuff.isHidden = false;
+            armorBuff.name = "Power Mode Decaying Armor";
+            armorBuff.buffColor = new Color32(214, 201, 58, 255);
+            armorBuff.iconSprite = Addressables.LoadAssetAsync<BuffDef>("RoR2/Base/Common/bdArmorBoost.asset").WaitForCompletion().iconSprite;
+
+            ContentAddition.AddBuffDef(armorBuff);
+
+            slowBuff = ScriptableObject.CreateInstance<BuffDef>();
+
+            slowBuff.isDebuff = true;
+            slowBuff.isCooldown = false;
+            slowBuff.isHidden = false;
+            slowBuff.buffColor = new Color32(234, 104, 107, 255);
+            slowBuff.name = "Power Mode Slow";
+            slowBuff.canStack = false;
+            slowBuff.iconSprite = Addressables.LoadAssetAsync<BuffDef>("RoR2/Base/SprintOutOfCombat/bdWhipBoost.asset").WaitForCompletion().iconSprite;
+
+            ContentAddition.AddBuffDef(slowBuff);
+        }
+
+        private static float countdown = 1f;
 
         private void ToolbotDualWieldBase_OnExit(On.EntityStates.Toolbot.ToolbotDualWieldBase.orig_OnExit orig, EntityStates.Toolbot.ToolbotDualWieldBase self)
         {
@@ -64,8 +74,6 @@ namespace HIFUMultTweaks
             }
             orig(self);
         }
-
-        private static float countdown = 1f;
 
         private void ToolbotDualWield_FixedUpdate(On.EntityStates.Toolbot.ToolbotDualWield.orig_FixedUpdate orig, EntityStates.Toolbot.ToolbotDualWield self)
         {

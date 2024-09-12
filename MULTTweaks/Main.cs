@@ -15,6 +15,7 @@ namespace HIFUMultTweaks
     [BepInDependency(LanguageAPI.PluginGUID)]
     [BepInDependency(R2APIContentManager.PluginGUID)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID)]
+    [BepInDependency("com.Wolfo.WolfoQualityOfLife", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class Main : BaseUnityPlugin
     {
@@ -22,7 +23,7 @@ namespace HIFUMultTweaks
 
         public const string PluginAuthor = "HIFU";
         public const string PluginName = "HIFUMultTweaks";
-        public const string PluginVersion = "1.0.4";
+        public const string PluginVersion = "1.0.7";
 
         public static ConfigFile HMTConfig;
         public static ConfigFile HMTBackupConfig;
@@ -109,7 +110,7 @@ namespace HIFUMultTweaks
             return false;
         }
 
-        private void WITHINDESTRUCTIONMYFUCKINGBELOVED()
+        private void UnprocessedIsActuallyMyFavoriteBandNowSorryGuys()
         {
         }
     }
